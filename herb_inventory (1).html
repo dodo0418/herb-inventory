@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="약재재고">
+<meta name="theme-color" content="#ffffff">
+<title>약재 재고 관리</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif;background:#f5f5f7;color:#1c1c1e;min-height:100vh}
+  .header{background:#fff;padding:16px 20px 12px;border-bottom:1px solid #e5e5ea;position:sticky;top:0;z-index:100}
+  .header h1{font-size:20px;font-weight:700;color:#1c1c1e}
+  .header p{font-size:12px;color:#8e8e93;margin-top:2px}
+  .tab-bar{display:flex;background:#fff;border-bottom:1px solid #e5e5ea;position:sticky;top:61px;z-index:99}
+  .tab{flex:1;padding:12px 8px;border:none;background:transparent;font-size:14px;color:#8e8e93;cursor:pointer;border-bottom:2px solid transparent;font-weight:500}
+  .tab.on{color:#007AFF;border-bottom-color:#007AFF}
+  .sec{display:none;padding:16px 16px 100px}.sec.on{display:block}
+  .upload-box{background:#fff;border:2px dashed #c7c7cc;border-radius:16px;padding:32px 20px;text-align:center;cursor:pointer;margin-bottom:16px}
+  .upload-box .icon{font-size:48px;margin-bottom:12px}
+  .upload-box strong{font-size:17px;display:block;margin-bottom:6px}
+  .upload-box p{font-size:14px;color:#8e8e93}
+  .preview-wrap{background:#fff;border-radius:16px;overflow:hidden;margin-bottom:12px}
+  .preview-wrap img{width:100%;max-height:240px;object-fit:contain;display:block;background:#f2f2f7}
+  .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;border-radius:12px;border:none;font-size:16px;font-weight:600;cursor:pointer;margin-bottom:10px}
+  .btn-primary{background:#007AFF;color:#fff}
+  .btn-primary:active{background:#0062cc}
+  .btn-secondary{background:#f2f2f7;color:#1c1c1e}
+  .btn-secondary:active{background:#e5e5ea}
+  .btn:disabled{opacity:0.5;cursor:not-allowed}
+  .card{background:#fff;border-radius:16px;padding:16px;margin-bottom:12px}
+  .card-title{font-size:13px;color:#8e8e93;font-weight:500;margin-bottom:12px}
+  .herb-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f2f2f7}
+  .herb-row:last-child{border-bottom:none}
+  .herb-info{flex:1}
+  .herb-name{font-size:16px;font-weight:600}
+  .herb-sub{font-size:12px;color:#8e8e93;margin-top:2px}
+  .badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600;margin-left:6px}
+  .b-new{background:#e8f5e9;color:#2e7d32}
+  .b-up{background:#e3f2fd;color:#1565c0}
+  .num-in{width:72px;padding:8px;border:1px solid #e5e5ea;border-radius:8px;font-size:15px;text-align:center;background:#f9f9f9}
+  .unit{font-size:13px;color:#8e8e93;min-width:18px}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+  .stat{background:#fff;border-radius:12px;padding:12px;text-align:center}
+  .stat .lbl{font-size:11px;color:#8e8e93;margin-bottom:4px}
+  .stat .val{font-size:24px;font-weight:700}
+  .search{width:100%;padding:12px 16px;border:none;border-radius:12px;background:#fff;font-size:16px;margin-bottom:12px;color:#1c1c1e}
+  .inv-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .inv-hdr h2{font-size:18px;font-weight:700}
+  .btn-sm{padding:8px 14px;border-radius:10px;border:1px solid #e5e5ea;background:#fff;font-size:14px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+  .btn-sm:active{background:#f2f2f7}
+  .inv-item{background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:8px}
+  .inv-item-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .inv-name{font-size:16px;font-weight:600}
+  .inv-loc{font-size:12px;color:#8e8e93}
+  .inv-item-bot{display:flex;align-items:center;gap:8px}
+  .qbadge{padding:4px 12px;border-radius:20px;font-size:14px;font-weight:600}
+  .q-ok{background:#e8f5e9;color:#2e7d32}
+  .q-low{background:#fff3e0;color:#e65100}
+  .q-zero{background:#fce4ec;color:#c62828}
+  .loc-in{flex:1;padding:8px 10px;border:1px solid #e5e5ea;border-radius:8px;font-size:14px;background:#f9f9f9;color:#1c1c1e}
+  .edit-in{width:72px;padding:8px;border:1px solid #e5e5ea;border-radius:8px;font-size:14px;text-align:center;background:#f9f9f9}
+  .save-btn{padding:8px 14px;border-radius:8px;border:none;background:#007AFF;color:#fff;font-size:14px;font-weight:600;cursor:pointer}
+  .del-btn{padding:8px 12px;border-radius:8px;border:none;background:#fce4ec;color:#c62828;font-size:14px;cursor:pointer}
+  .spinner{width:20px;height:20px;border:3px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:sp 0.7s linear infinite;display:inline-block}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.8);color:#fff;padding:12px 24px;border-radius:30px;font-size:14px;font-weight:500;opacity:0;transition:opacity 0.25s;pointer-events:none;z-index:999;white-space:nowrap}
+  .toast.on{opacity:1}
+  .empty{text-align:center;padding:40px 20px;color:#8e8e93;font-size:15px}
+  .fab-row{display:flex;gap:10px;margin-bottom:12px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🌿 약재 재고 관리</h1>
+  <p>동탄진맥한의원</p>
+</div>
+
+<div class="tab-bar">
+  <button class="tab on" onclick="goTab('scan')">📷 명세서 인식</button>
+  <button class="tab" onclick="goTab('inv')">📋 재고 현황</button>
+</div>
+
+<!-- 명세서 인식 탭 -->
+<div id="sec-scan" class="sec on">
+  <div id="upload-zone" class="upload-box" onclick="document.getElementById('fi').click()">
+    <div class="icon">📄</div>
+    <strong>명세서 사진을 올려주세요</strong>
+    <p>탭하여 카메라 또는 갤러리 선택</p>
+  </div>
+  <input type="file" id="fi" accept="image/*" capture="environment" style="display:none" onchange="onFile(this.files[0])">
+
+  <div id="prev-sec" style="display:none">
+    <div class="preview-wrap"><img id="prev-img"></div>
+    <div id="analyze-bar">
+      <button class="btn btn-primary" id="analyze-btn" onclick="analyze()">✨ AI로 약재 인식하기</button>
+      <button class="btn btn-secondary" onclick="resetScan()">🔄 다시 선택</button>
+    </div>
+  </div>
+
+  <div id="result-sec" style="display:none">
+    <div class="card">
+      <div class="card-title">인식된 약재 목록 — 수량을 확인하세요</div>
+      <div id="rec-list"></div>
+    </div>
+    <button class="btn btn-primary" onclick="applyAll()">✅ 재고에 반영하기</button>
+    <button class="btn btn-secondary" onclick="resetScan()">🔄 새 명세서</button>
+  </div>
+</div>
+
+<!-- 재고 현황 탭 -->
+<div id="sec-inv" class="sec">
+  <div class="stats">
+    <div class="stat"><div class="lbl">총 약재</div><div class="val" id="s-total">0</div></div>
+    <div class="stat"><div class="lbl">부족</div><div class="val" id="s-low" style="color:#e65100">0</div></div>
+    <div class="stat"><div class="lbl">소진</div><div class="val" id="s-zero" style="color:#c62828">0</div></div>
+  </div>
+
+  <div class="fab-row">
+    <button class="btn-sm" onclick="addManual()">➕ 직접 추가</button>
+    <button class="btn-sm" onclick="exportCSV()">📤 CSV 내보내기</button>
+  </div>
+
+  <input class="search" type="search" placeholder="🔍 약재 이름 검색..." oninput="renderInv(this.value)">
+  <div id="inv-body"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var inv = JSON.parse(localStorage.getItem('herb_inv') || 'null') || [
+  {name:'황기',qty:500,unit:'g',loc:'A-1'},
+  {name:'당귀',qty:300,unit:'g',loc:'A-2'},
+  {name:'천궁',qty:200,unit:'g',loc:'B-1'},
+  {name:'백작약',qty:150,unit:'g',loc:'B-2'},
+  {name:'숙지황',qty:80,unit:'g',loc:'C-1'},
+  {name:'감초',qty:40,unit:'g',loc:'C-2'},
+];
+var b64 = null, b64type = 'image/jpeg', recs = [];
+
+function save(){ try{ localStorage.setItem('herb_inv', JSON.stringify(inv)); }catch(e){} }
+
+function goTab(t){
+  document.querySelectorAll('.tab').forEach(function(el,i){
+    el.classList.toggle('on', ['scan','inv'][i] === t);
+  });
+  document.querySelectorAll('.sec').forEach(function(s){ s.classList.remove('on'); });
+  document.getElementById('sec-'+t).classList.add('on');
+  if(t === 'inv') renderInv();
+}
+
+function onFile(f){
+  if(!f) return;
+  b64type = f.type || 'image/jpeg';
+  var r = new FileReader();
+  r.onload = function(e){
+    b64 = e.target.result.split(',')[1];
+    document.getElementById('prev-img').src = e.target.result;
+    document.getElementById('prev-sec').style.display = 'block';
+    document.getElementById('upload-zone').style.display = 'none';
+    document.getElementById('result-sec').style.display = 'none';
+    document.getElementById('analyze-bar').style.display = 'block';
+  };
+  r.readAsDataURL(f);
+}
+
+async function analyze(){
+  if(!b64) return;
+  var btn = document.getElementById('analyze-btn');
+  btn.innerHTML = '<span class="spinner"></span> 인식 중...';
+  btn.disabled = true;
+  var names = inv.map(function(i){ return i.name; }).join(', ');
+  try{
+    var res = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        messages:[{role:'user',content:[
+          {type:'image',source:{type:'base64',media_type:b64type,data:b64}},
+          {type:'text',text:'이 이미지는 한의원 약재 납품 명세서입니다. 약재 이름과 수량(숫자만)을 모두 추출해주세요. g, kg, 첩 등 단위는 무시하고 숫자만 추출하세요.\n기존 재고: '+names+'\n\nJSON만 출력(다른 텍스트 없이):\n{"items":[{"name":"약재명","qty":숫자}]}'}
+        ]}]
+      })
+    });
+    var d = await res.json();
+    var txt = d.content.map(function(c){ return c.text||''; }).join('');
+    var parsed = JSON.parse(txt.replace(/```json|```/g,'').trim()).items || [];
+    recs = parsed.map(function(item){ return {name:item.name, qty:Number(item.qty)||0}; });
+    renderRecs();
+  } catch(e){
+    showToast('인식 실패 — 사진을 다시 시도해 주세요');
+    btn.innerHTML = '✨ AI로 약재 인식하기';
+    btn.disabled = false;
+  }
+}
+
+function renderRecs(){
+  var el = document.getElementById('rec-list');
+  if(!recs.length){ el.innerHTML = '<p class="empty">약재를 찾지 못했어요</p>'; return; }
+  el.innerHTML = recs.map(function(item,i){
+    var ex = inv.find(function(h){ return h.name === item.name; });
+    var cur = ex ? ' (현재 '+ex.qty+')' : '';
+    return '<div class="herb-row">'+
+      '<div class="herb-info">'+
+        '<div class="herb-name">'+item.name+
+          '<span class="badge '+(ex?'b-up':'b-new')+'">'+(ex?'추가':'신규')+'</span>'+
+        '</div>'+
+        '<div class="herb-sub">'+cur+'</div>'+
+      '</div>'+
+      '<input class="num-in" type="number" inputmode="numeric" value="'+item.qty+'" id="rq'+i+'" min="0">'+
+    '</div>';
+  }).join('');
+  document.getElementById('analyze-bar').style.display = 'none';
+  document.getElementById('result-sec').style.display = 'block';
+}
+
+function applyAll(){
+  recs.forEach(function(item,i){
+    var el = document.getElementById('rq'+i);
+    var q = parseFloat(el ? el.value : item.qty) || 0;
+    var ex = inv.find(function(h){ return h.name === item.name; });
+    if(ex){ ex.qty = Math.round(ex.qty + q); }
+    else{ inv.push({name:item.name, qty:q, unit:'', loc:''}); }
+  });
+  save();
+  showToast(recs.length+'종 약재가 재고에 반영됐습니다 ✓');
+  setTimeout(function(){ goTab('inv'); }, 800);
+  resetScan();
+}
+
+function resetScan(){
+  b64 = null; recs = [];
+  document.getElementById('prev-sec').style.display = 'none';
+  document.getElementById('result-sec').style.display = 'none';
+  document.getElementById('upload-zone').style.display = 'block';
+  document.getElementById('fi').value = '';
+  var btn = document.getElementById('analyze-btn');
+  btn.innerHTML = '✨ AI로 약재 인식하기';
+  btn.disabled = false;
+  document.getElementById('analyze-bar').style.display = 'block';
+}
+
+function renderInv(q){
+  q = q || '';
+  var list = inv.filter(function(h){ return h.name.includes(q); });
+  document.getElementById('s-total').textContent = inv.length;
+  document.getElementById('s-low').textContent = inv.filter(function(h){ return h.qty > 0 && h.qty <= 100; }).length;
+  document.getElementById('s-zero').textContent = inv.filter(function(h){ return h.qty === 0; }).length;
+  if(!list.length){ document.getElementById('inv-body').innerHTML = '<p class="empty">약재가 없어요</p>'; return; }
+  var html = '';
+  list.forEach(function(h){
+    var ri = inv.indexOf(h);
+    var qc = h.qty === 0 ? 'q-zero' : h.qty <= 100 ? 'q-low' : 'q-ok';
+    html += '<div class="inv-item">'+
+      '<div class="inv-item-top">'+
+        '<div>'+
+          '<div class="inv-name">'+h.name+'</div>'+
+          '<div class="inv-loc">'+(h.loc ? '📍 '+h.loc : '위치 미입력')+'</div>'+
+        '</div>'+
+        '<span class="qbadge '+qc+'">'+h.qty+'</span>'+
+      '</div>'+
+      '<div class="inv-item-bot">'+
+        '<input class="loc-in" type="text" value="'+(h.loc||'')+'" placeholder="위치 입력 (예: A-1)" onchange="updateLoc('+ri+',this.value)">'+
+        '<input class="edit-in" type="number" inputmode="numeric" value="'+h.qty+'" id="iq'+ri+'" min="0">'+
+        '<button class="save-btn" onclick="updateQty('+ri+')">저장</button>'+
+        '<button class="del-btn" onclick="delHerb('+ri+')" aria-label="삭제">🗑</button>'+
+      '</div>'+
+    '</div>';
+  });
+  document.getElementById('inv-body').innerHTML = html;
+}
+
+function updateQty(i){
+  var v = parseFloat(document.getElementById('iq'+i).value);
+  if(isNaN(v) || v < 0) return;
+  inv[i].qty = Math.round(v);
+  save(); renderInv(); showToast('수량이 수정됐습니다');
+}
+
+function updateLoc(i,v){
+  inv[i].loc = v; save();
+}
+
+function delHerb(i){
+  if(!confirm(inv[i].name+' 을(를) 삭제할까요?')) return;
+  var n = inv[i].name;
+  inv.splice(i,1); save(); renderInv(); showToast(n+' 삭제됐습니다');
+}
+
+function addManual(){
+  var name = prompt('약재 이름:'); if(!name) return;
+  var qty = parseFloat(prompt('수량:') || '0');
+  var loc = prompt('위치 (예: A-1, 냉장고-상단):') || '';
+  inv.push({name:name, qty:qty, unit:'', loc:loc});
+  save(); renderInv(); showToast(name+' 추가됐습니다');
+}
+
+function exportCSV(){
+  var rows = [['약재명','수량','위치']].concat(
+    inv.map(function(h){ return [h.name, h.qty, h.loc||'']; })
+  );
+  var csv = rows.map(function(r){ return r.join(','); }).join('\n');
+  var blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a'); a.href=url; a.download='약재재고.csv'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function showToast(msg){
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('on');
+  setTimeout(function(){ t.classList.remove('on'); }, 2500);
+}
+</script>
+</body>
+</html>
